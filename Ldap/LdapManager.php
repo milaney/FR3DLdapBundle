@@ -114,6 +114,39 @@ class LdapManager implements LdapManagerInterface
     }
 
     /**
+     * Add roles based on role configuration
+     *
+     * @param LdapUserRoleInterface
+     * @param array $entry
+     * @return void
+     */
+    private function addRoles($user, $entry)
+    {
+        $filter = isset($this->params['role']['filter']) ? $this->params['role']['filter'] : '';
+
+        $entries = $this->connection->search(
+            $this->params['role']['baseDn'],
+            sprintf('(&%s(%s=%s))', $filter, $this->params['role']['userAttribute'], $entry['dn']),
+            array($this->params['role']['nameAttribute'])
+        );
+
+        for ($i = 0; $i < $entries['count']; $i++) {
+            $user->addRole(sprintf('ROLE_%s',
+               self::slugify($entries[$i][$this->params['role']['nameAttribute']][0])
+            ));
+        }
+    }
+
+    private static function slugify($role)
+    {
+        $role = preg_replace('/\W+/', '_', $role);
+        $role = trim($role, '_');
+        $role = strtoupper($role);
+
+        return $role;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function bind(UserInterface $user, $password)
