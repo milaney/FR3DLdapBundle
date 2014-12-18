@@ -2,6 +2,7 @@
 
 namespace FR3D\LdapBundle\Ldap;
 
+use FOS\UserBundle\Model\UserManagerInterface;
 use FR3D\LdapBundle\Driver\LdapDriverInterface;
 use FR3D\LdapBundle\Model\LdapUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -15,7 +16,7 @@ class LdapManager implements LdapManagerInterface
     protected $ldapAttributes = array();
     protected $ldapUsernameAttr;
 
-    public function __construct(LdapDriverInterface $driver, $userManager, array $params)
+    public function __construct(LdapDriverInterface $driver, UserManagerInterface $userManager, array $params)
     {
         $this->driver = $driver;
         $this->userManager = $userManager;
@@ -108,6 +109,10 @@ class LdapManager implements LdapManagerInterface
             call_user_func(array($user, $attr['user_method']), $value);
         }
 
+        if (count($this->params['role'])) {
+            $this->addRoles($user, $entry);
+        }
+
         if ($user instanceof LdapUserInterface) {
             $user->setDn($entry['dn']);
         }
@@ -116,7 +121,7 @@ class LdapManager implements LdapManagerInterface
     /**
      * Add roles based on role configuration
      *
-     * @param LdapUserRoleInterface
+     * @param UserInterface
      * @param array $entry
      * @return void
      */
@@ -124,15 +129,15 @@ class LdapManager implements LdapManagerInterface
     {
         $filter = isset($this->params['role']['filter']) ? $this->params['role']['filter'] : '';
 
-        $entries = $this->connection->search(
+        $entries = $this->driver->search(
             $this->params['role']['baseDn'],
-            sprintf('(&%s(%s=%s))', $filter, $this->params['role']['userAttribute'], $entry['dn']),
+            sprintf('(&%s(%s=%s))', $filter, $this->params['role']['userDnAttribute'], $entry['dn']),
             array($this->params['role']['nameAttribute'])
         );
 
         for ($i = 0; $i < $entries['count']; $i++) {
             $user->addRole(sprintf('ROLE_%s',
-               self::slugify($entries[$i][$this->params['role']['nameAttribute']][0])
+                self::slugify($entries[$i][$this->params['role']['nameAttribute']][0])
             ));
         }
     }
