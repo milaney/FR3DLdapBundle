@@ -1,6 +1,7 @@
 <?php
 
 namespace FR3D\LdapBundle\Model;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 interface LdapUserInterface
 {
@@ -17,4 +18,13 @@ interface LdapUserInterface
      * @return string Distinguished Name
      */
     public function getDn();
+
+    /**
+     * Updates a user.
+     *
+     * @param UserInterface $user
+     *
+     * @return void
+     */
+    public function updateUser(UserInterface $user);
 }

@@ -26,6 +26,16 @@ class LdapAuthenticationProvider extends UserAuthenticationProvider
     private $ldapManager;
 
     /**
+     * @var mixed
+     */
+    private $userManager;
+
+    /**
+     * @var bool
+     */
+    private $updateUser;
+
+    /**
      * Constructor.
      *
      * @param UserCheckerInterface  $userChecker                An UserCheckerInterface interface
@@ -34,12 +44,14 @@ class LdapAuthenticationProvider extends UserAuthenticationProvider
      * @param LdapManagerInterface  $ldapManager                An LdapProviderInterface interface
      * @param Boolean               $hideUserNotFoundExceptions Whether to hide user not found exception or not
      */
-    public function __construct(UserCheckerInterface $userChecker, $providerKey, UserProviderInterface $userProvider, LdapManagerInterface $ldapManager, $hideUserNotFoundExceptions = true)
+    public function __construct(UserCheckerInterface $userChecker, $providerKey, UserProviderInterface $userProvider, LdapManagerInterface $ldapManager, $userManager, $hideUserNotFoundExceptions = true, $updateUser = false)
     {
         parent::__construct($userChecker, $providerKey, $hideUserNotFoundExceptions);
 
         $this->userProvider = $userProvider;
         $this->ldapManager = $ldapManager;
+        $this->userManager = $userManager;
+        $this->updateUser = $updateUser;
     }
 
     /**
@@ -54,6 +66,16 @@ class LdapAuthenticationProvider extends UserAuthenticationProvider
 
         try {
             $user = $this->userProvider->loadUserByUsername($username);
+
+            if ($this->updateUser && $this->userProvider instanceof ChainUserProvider) {
+                foreach ($this->userProvider->getProviders() as $provider) {
+                    if ($provider instanceof LdapUserProvider) {
+                        $ldapUser = $provider->loadUserByUsername($username);
+                        $user->setRoles($ldapUser->getRoles());
+                        $this->userManager->updateUser($user);
+                    }
+                }
+            }
 
             return $user;
         } catch (UsernameNotFoundException $notFound) {
