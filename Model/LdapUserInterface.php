@@ -26,5 +26,5 @@ interface LdapUserInterface
      *
      * @return void
      */
-    public function updateUser(UserInterface $user);
+    //public function updateUser(UserInterface $user);
 }

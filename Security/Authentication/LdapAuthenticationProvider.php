@@ -3,8 +3,10 @@
 namespace FR3D\LdapBundle\Security\Authentication;
 
 use FR3D\LdapBundle\Ldap\LdapManagerInterface;
+use FR3D\LdapBundle\Security\User\LdapUserProvider;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Security\Core\Authentication\Provider\UserAuthenticationProvider;
+use Symfony\Component\Security\Core\User\ChainUserProvider;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Core\User\UserCheckerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -43,6 +45,7 @@ class LdapAuthenticationProvider extends UserAuthenticationProvider
      * @param UserProviderInterface $userProvider               An UserProviderInterface interface
      * @param LdapManagerInterface  $ldapManager                An LdapProviderInterface interface
      * @param Boolean               $hideUserNotFoundExceptions Whether to hide user not found exception or not
+     * @param Boolean               $updateUser                 Whether to update user on login
      */
     public function __construct(UserCheckerInterface $userChecker, $providerKey, UserProviderInterface $userProvider, LdapManagerInterface $ldapManager, $userManager, $hideUserNotFoundExceptions = true, $updateUser = false)
     {
