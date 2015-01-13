@@ -98,12 +98,13 @@ class LdapManager implements LdapManagerInterface
             }
 
             $ldapValue = $entry[$attr['ldap_attr']];
-            $value = null;
+            $value = $ldapValue;
 
-            if (!array_key_exists('count', $ldapValue) ||  $ldapValue['count'] == 1) {
-                $value = $ldapValue[0];
-            } else {
+            if (array_key_exists('count', $ldapValue)) {
                 $value = array_slice($ldapValue, 1);
+            }
+            if (count($value) == 1) {
+                $value = $value[0];
             }
 
             call_user_func(array($user, $attr['user_method']), $value);
@@ -111,6 +112,10 @@ class LdapManager implements LdapManagerInterface
 
         if (count($this->params['role'])) {
             $this->addRoles($user, $entry);
+        }
+
+        if (count($this->params['manages'])) {
+            $this->addManages($user, $entry);
         }
 
         if ($user instanceof LdapUserInterface) {
@@ -140,6 +145,30 @@ class LdapManager implements LdapManagerInterface
                 self::slugify($entries[$i][$this->params['role']['nameAttribute']][0])
             ));
         }
+    }
+
+    /**
+     * Add users this user manages based on configuration
+     *
+     * @param UserInterface
+     * @param array $entry
+     * @return void
+     */
+    private function addManages($user, $entry)
+    {
+        $filter = isset($this->params['manages']['filter']) ? $this->params['manages']['filter'] : '';
+
+        $entries = $this->driver->search(
+            $this->params['manages']['baseDn'],
+            sprintf('(&%s(%s=%s))', $filter, $this->params['manages']['userDnAttribute'], 'CN=Mike McGrail,ou=Medicore,ou=Utrecht-Kanaalweg,dc=efocus,dc=local'/*$entry['dn']*/),
+            array($this->params['manages']['nameAttribute'])
+        );
+
+        $manages = array();
+        for ($i = 0; $i < $entries['count']; $i++) {
+            $manages[] = $entries[$i][$this->params['manages']['nameAttribute']][0];
+        }
+        $user->setManages($manages);
     }
 
     private static function slugify($role)
