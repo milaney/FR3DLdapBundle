@@ -160,7 +160,7 @@ class LdapManager implements LdapManagerInterface
 
         $entries = $this->driver->search(
             $this->params['manages']['baseDn'],
-            sprintf('(&%s(%s=%s))', $filter, $this->params['manages']['userDnAttribute'], 'CN=Mike McGrail,ou=Medicore,ou=Utrecht-Kanaalweg,dc=efocus,dc=local'/*$entry['dn']*/),
+            sprintf('(&%s(%s=%s))', $filter, $this->params['manages']['userDnAttribute'], $entry['dn']),
             array($this->params['manages']['nameAttribute'])
         );
 
