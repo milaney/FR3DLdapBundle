@@ -74,8 +74,7 @@ class LdapAuthenticationProvider extends UserAuthenticationProvider
                 foreach ($this->userProvider->getProviders() as $provider) {
                     if ($provider instanceof LdapUserProvider) {
                         $ldapUser = $provider->loadUserByUsername($username);
-                        $user->setRoles($ldapUser->getRoles());
-                        $user->setManages($ldapUser->getManages());
+                        $user->setRoles($user->getRoles() + $ldapUser->getRoles());
                         $this->userManager->updateUser($user);
                     }
                 }
