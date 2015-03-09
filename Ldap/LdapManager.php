@@ -92,12 +92,14 @@ class LdapManager implements LdapManagerInterface
             $user->setEnabled(true);
         }
 
+        $entry = array_change_key_case($entry, CASE_LOWER);
+
         foreach ($this->params['attributes'] as $attr) {
-            if (!array_key_exists($attr['ldap_attr'], $entry)) {
+            if (!array_key_exists(strtolower($attr['ldap_attr']), $entry)) {
                 continue;
             }
 
-            $ldapValue = $entry[$attr['ldap_attr']];
+            $ldapValue = $entry[strtolower($attr['ldap_attr'])];
             $value = $ldapValue;
 
             if (array_key_exists('count', $ldapValue)) {
@@ -110,7 +112,7 @@ class LdapManager implements LdapManagerInterface
             call_user_func(array($user, $attr['user_method']), $value);
         }
 
-        if (count($this->params['role'])) {
+        if (isset($this->params['role']) && count($this->params['role'])) {
             $this->addRoles($user, $entry);
         }
 
@@ -137,8 +139,10 @@ class LdapManager implements LdapManagerInterface
         );
 
         for ($i = 0; $i < $entries['count']; $i++) {
+            $entries[$i] = array_change_key_case($entries[$i], CASE_LOWER);
+
             $user->addRole(sprintf('ROLE_%s',
-                self::slugify($entries[$i][$this->params['role']['nameAttribute']][0])
+                self::slugify($entries[$i][strtolower($this->params['role']['nameAttribute'])][0])
             ));
         }
     }
